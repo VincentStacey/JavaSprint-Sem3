@@ -1,0 +1,72 @@
+Documentation for the Java Console-Based E-Commerce Platform
+User Documentation
+About the Application
+The Java Console-Based E-Commerce Platform is a command-line application simulating a marketplace where users can register as Buyers, Sellers, or Admins. Users can log in to perform specific actions based on their role, including product management, browsing, and administrative functions.
+
+Class Descriptions
+User:
+
+Base class representing all users.
+Attributes: id, username, password, email, role.
+Inherited by Buyer, Seller, and Admin.
+Buyer:
+
+Inherits from User.
+Can browse products, search by name, and view product details.
+Seller:
+
+Inherits from User.
+Can add, update, and delete products, and view their product listings.
+Admin:
+
+Inherits from User.
+Can view all users and products, delete users, and manage platform data.
+Product:
+
+Represents items available for sale.
+Attributes: id, name, price, quantity, sellerId.
+DAO (Data Access Objects):
+
+Interfaces to interact with the PostgreSQL database (e.g., UserDAO, ProductDAO).
+Service Classes:
+
+Handle business logic for users and products (e.g., UserService, ProductService).
+How to Start the Application
+Clone the repository from GitHub.
+Set up the PostgreSQL database (refer to Development Documentation for details).
+Compile and run the project using javac and java commands.
+Start the application from the console and follow on-screen instructions.
+Class Diagram
+(To be inserted: A UML diagram showing associations between User, Product, Buyer, Seller, Admin, and DAO classes.)
+
+Development Documentation
+Source Code Directory Structure
+src/
+├── models/            # Entity classes (User, Product, etc.)
+├── dao/               # DAO interfaces and implementations
+├── service/           # Business logic services
+├── ui/                # Console-based menu system
+├── resources/         # Configuration files (database properties, etc.)
+└── main.java          # Main entry point for the application
+Build Process
+
+Repository Access
+Clone the repository using the following command:
+git clone <repository_url>
+Deployment Documentation
+Installation Steps
+Pre-Requisites:
+
+Java Development Kit (JDK) installed.
+PostgreSQL installed and configured.
+Setting Up Dependencies:
+
+Download the required libraries (BCrypt and PostgreSQL JDBC driver).
+Place the JAR files in the lib/ directory.
+Database Configuration:
+
+Set up the database as described in the Development Documentation.
+
+Running the Application:
+Launch the console interface.
+Register as a new user and log in to access the platform features.
