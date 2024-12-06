@@ -7,6 +7,17 @@ public class User {
     private String email;
     private String role;
 
+    // Constructor
+    public User(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
+
+    // Default Constructor
+    public User() {
+    }
+
     // Getters and Setters
     public int getId() {
         return id;
@@ -58,5 +69,3 @@ public class User {
                 '}';
     }
 }
-
-

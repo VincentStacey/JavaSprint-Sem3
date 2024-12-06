@@ -1,13 +1,13 @@
 package src.main.java.dao;
 
+import src.main.java.models.Product;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import src.main.java.models.Product;
-
 public class ProductDAO {
-    private Connection connection;
+    private final Connection connection;
 
     public ProductDAO(Connection connection) {
         this.connection = connection;
@@ -29,17 +29,12 @@ public class ProductDAO {
         List<Product> products = new ArrayList<>();
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
             while (rs.next()) {
-                Product product = new Product();
-                product.setId(rs.getInt("id"));
-                product.setName(rs.getString("name"));
-                product.setPrice(rs.getDouble("price"));
-                product.setQuantity(rs.getInt("quantity"));
-                product.setSellerId(rs.getInt("seller_id"));
-                products.add(product);
+                products.add(mapRowToProduct(rs));
             }
         }
         return products;
     }
+
 
     public List<Product> getProductsByName(String name) throws SQLException {
         String query = "SELECT * FROM products WHERE name ILIKE ?";
@@ -48,19 +43,14 @@ public class ProductDAO {
             stmt.setString(1, "%" + name + "%");
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Product product = new Product();
-                    product.setId(rs.getInt("id"));
-                    product.setName(rs.getString("name"));
-                    product.setPrice(rs.getDouble("price"));
-                    product.setQuantity(rs.getInt("quantity"));
-                    product.setSellerId(rs.getInt("seller_id"));
-                    products.add(product);
+                    products.add(mapRowToProduct(rs));
                 }
             }
         }
         return products;
     }
 
+   
     public List<Product> getProductsBySeller(int sellerId) throws SQLException {
         String query = "SELECT * FROM products WHERE seller_id = ?";
         List<Product> products = new ArrayList<>();
@@ -68,19 +58,14 @@ public class ProductDAO {
             stmt.setInt(1, sellerId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Product product = new Product();
-                    product.setId(rs.getInt("id"));
-                    product.setName(rs.getString("name"));
-                    product.setPrice(rs.getDouble("price"));
-                    product.setQuantity(rs.getInt("quantity"));
-                    product.setSellerId(rs.getInt("seller_id"));
-                    products.add(product);
+                    products.add(mapRowToProduct(rs));
                 }
             }
         }
         return products;
     }
 
+   
     public void updateProduct(Product product) throws SQLException {
         String query = "UPDATE products SET name = ?, price = ?, quantity = ? WHERE id = ? AND seller_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -93,29 +78,87 @@ public class ProductDAO {
         }
     }
 
-    public void deleteProduct(int productId) throws SQLException {
-        String query = "DELETE FROM products WHERE id = ?";
+   
+    public boolean removeProduct(int productId, int sellerId) throws SQLException {
+        String query = "DELETE FROM products WHERE id = ? AND seller_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, productId);
+            stmt.setInt(2, sellerId);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public List<Product> getPurchasedProductsByBuyer(int buyerId) throws SQLException {
+        String query = """
+                    SELECT p.id, p.name, p.price, p.quantity, p.seller_id
+                    FROM purchases pu
+                    JOIN products p ON pu.product_id = p.id
+                    WHERE pu.buyer_id = ?
+                """;
+        List<Product> products = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            System.out.println("Executing query for buyer ID: " + buyerId); 
+            stmt.setInt(1, buyerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapRowToProduct(rs));
+                }
+            }
+        }
+        return products;
+    }
+
+    public void addPurchase(int buyerId, int productId, int quantity) throws SQLException {
+        String sql = "INSERT INTO purchases (buyer_id, product_id, quantity) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, buyerId);
+            stmt.setInt(2, productId);
+            stmt.setInt(3, quantity);
             stmt.executeUpdate();
         }
     }
 
     public List<String> getAllProductsWithSellerInfo() throws SQLException {
         String query = """
-            SELECT p.id, p.name, p.price, p.quantity, u.username, u.email 
-            FROM products p 
-            JOIN users u ON p.seller_id = u.id
-        """;
-        List<String> products = new ArrayList<>();
+                    SELECT p.id, p.name, p.price, p.quantity, u.username AS seller_name, u.email AS seller_email
+                    FROM products p
+                    JOIN users u ON p.seller_id = u.id
+                """;
+        List<String> productDetails = new ArrayList<>();
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
             while (rs.next()) {
-                String productInfo = String.format("ID: %d, Name: %s, Price: %.2f, Quantity: %d, Seller: %s (%s)",
-                        rs.getInt("id"), rs.getString("name"), rs.getDouble("price"), rs.getInt("quantity"),
-                        rs.getString("username"), rs.getString("email"));
-                products.add(productInfo);
+                String details = String.format(
+                        "Product ID: %d | Name: %s | Price: %.2f | Quantity: %d | Seller: %s (%s)",
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getDouble("price"),
+                        rs.getInt("quantity"),
+                        rs.getString("seller_name"),
+                        rs.getString("seller_email"));
+                productDetails.add(details);
             }
         }
-        return products;
+        return productDetails;
+    }
+
+    public Product getProductById(int productId) throws SQLException {
+        String query = "SELECT * FROM products WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, productId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToProduct(rs);
+                }
+            }
+        }
+        return null;
+    }
+    private Product mapRowToProduct(ResultSet rs) throws SQLException {
+        return new Product(
+                rs.getInt("id"),
+                rs.getString("name"),
+                rs.getDouble("price"),
+                rs.getInt("quantity"),
+                rs.getInt("seller_id"));
     }
 }

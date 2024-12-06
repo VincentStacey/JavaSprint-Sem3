@@ -58,11 +58,12 @@ public class UserDAO {
         return users;
     }
 
-    public void deleteUser(int userId) throws SQLException {
+    public boolean deleteUser(int userId) throws SQLException {
         String query = "DELETE FROM users WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, userId);
-            stmt.executeUpdate();
+            int rowsAffected = stmt.executeUpdate(); 
+            return rowsAffected > 0; 
         }
     }
 }
